@@ -80,6 +80,20 @@ func Initialize(db *xorm.Engine, opts ...Option) {
 	}
 }
 
+// Before uses the ctx,spanName,engine to start tracer, creates session.
+func Before(ctx context.Context, spanName string, tx *xorm.Engine) (context.Context, *xorm.Session) {
+	p := *defaultXORMPlugin
+
+	return p.before(ctx, spanName, tx, nil)
+}
+
+// BeforeWithSession uses the ctx,spanName,session to start tracer, creates session.
+func BeforeWithSession(ctx context.Context, spanName string, session *xorm.Session) (context.Context, *xorm.Session) {
+	p := *defaultXORMPlugin
+
+	return p.before(ctx, spanName, nil, session)
+}
+
 func (p *plugin) before(ctx context.Context, spanName string, tx *xorm.Engine, session *xorm.Session) (context.Context, *xorm.Session) {
 	// default trace.ContextWithSpan(ctx, span)
 	ctx, _ = p.tracer.Start(ctx, spanName, trace.WithSpanKind(trace.SpanKindClient))
@@ -91,6 +105,14 @@ func (p *plugin) before(ctx context.Context, spanName string, tx *xorm.Engine, s
 	}
 
 	return ctx, session
+}
+
+// After collects the trace data after session actions.
+func After(ctx context.Context, driverName, tableName string, rowsAffected int64, tx *xorm.Session, txErr error, opts ...Option) {
+	p := *defaultXORMPlugin
+
+	p.after(ctx, driverName, tableName, rowsAffected, tx, txErr, opts...)
+	return
 }
 
 func (p *plugin) after(ctx context.Context, driverName, tableName string, rowsAffected int64, tx *xorm.Session, txErr error, opts ...Option) {
