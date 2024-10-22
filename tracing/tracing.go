@@ -95,6 +95,11 @@ func BeforeWithSession(ctx context.Context, spanName string, session *xorm.Sessi
 }
 
 func (p *plugin) before(ctx context.Context, spanName string, tx *xorm.Engine, session *xorm.Session) (context.Context, *xorm.Session) {
+	if ctx == nil {
+		// Prevent trace.ContextWithSpan from panicking.
+		ctx = context.Background()
+	}
+
 	// default trace.ContextWithSpan(ctx, span)
 	ctx, _ = p.tracer.Start(ctx, spanName, trace.WithSpanKind(trace.SpanKindClient))
 
