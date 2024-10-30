@@ -104,7 +104,7 @@ func (p *plugin) before(ctx context.Context, spanName string, tx *xorm.Engine, s
 	ctx, _ = p.tracer.Start(ctx, spanName, trace.WithSpanKind(trace.SpanKindClient))
 
 	if session != nil {
-		session = session.Context(ctx)
+		session = session.Context(ctx).Clone() // a new session, use ctx
 	} else {
 		session = tx.Context(ctx)
 	}
